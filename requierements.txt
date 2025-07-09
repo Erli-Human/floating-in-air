@@ -1,0 +1,4 @@
+gradio
+speechrecognition
+pyttsx3
+opencv-python
