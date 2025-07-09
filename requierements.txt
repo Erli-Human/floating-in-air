@@ -1,4 +1,4 @@
-gradio
-speechrecognition
-pyttsx3
-opencv-python
+Flask==2.0.3
+Flask-CORS==3.0.10
+numpy==1.21.2
+requests==2.26.0
