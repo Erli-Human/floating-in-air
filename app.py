@@ -1,44 +1,29 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template
+from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import numpy as np
-import random
-import json
 
 app = Flask(__name__)
-CORS(app)  # Enable cross-origin requests for API endpoints
+app.config['SECRET_KEY'] = 'your_secret_key'
+CORS(app)  # Allow Cross-Origin Request for WebGPU and SocketIO
+socketio = SocketIO(app)
 
-# Example function to simulate retrieving and utilizing a Smola model
-def load_smola_model():
-    # Load your Smola model here; this is a placeholder
-    # Assume we correctly load a Koroko model here
-    return "Smola Model Loaded"
-
-def generate_voice_options():
-    voice_options = [
-        {"name": "Default", "language": "English", "gender": "Male"},
-        {"name": "Natural", "language": "English", "gender": "Female"},
-        {"name": "Energetic", "language": "Spanish", "gender": "Male"},
-        {"name": "Calm", "language": "French", "gender": "Female"},
-    ]
-    return voice_options
+# In-memory storage for chat messages
+chat_messages = []
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def home():
+    return render_template('index.html')  # Serve the HTML for the front end
 
-@app.route('/api/voice-options', methods=['GET'])
-def get_voice_options():
-    options = generate_voice_options()
-    return jsonify(options)
+@socketio.on('send_message')
+def handle_send_message(data):
+    print('Received message:', data)
+    chat_messages.append(data)  # Store the message
+    emit('receive_message', data, broadcast=True)  # Broadcast to all users
 
-@app.route('/api/smola-inference', methods=['POST'])
-def smola_inference():
-    data = request.json
-    # Process the input data using the Smola model, placeholder processing logic
-    response = {
-        "result": f"Processed input text: {data['text']} with model {load_smola_model()}"
-    }
-    return jsonify(response)
+@socketio.on('get_messages')
+def handle_get_messages():
+    emit('receive_all_messages', chat_messages)  # Send all messages to the user
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
