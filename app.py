@@ -1,49 +1,44 @@
-import gradio as gr
-import speech_recognition as sr
-import pyttsx3
-import cv2
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
+import numpy as np
+import random
+import json
 
-def transcribe_audio(audio):
-    recognizer = sr.Recognizer()
-    with sr.AudioFile(audio) as source:
-        audio_data = recognizer.record(source)
-        return recognizer.recognize_google(audio_data)
+app = Flask(__name__)
+CORS(app)  # Enable cross-origin requests for API endpoints
 
-def text_to_speech(text, voice='default'):
-    engine = pyttsx3.init()
-    # You would select voice parameters based on 'voice' input
-    voices = engine.getProperty('voices')
-    if voice == 'realistic':
-        engine.setProperty('voice', voices[1].id)  # example realistic voice, adjust as needed
-    engine.say(text)
-    engine.runAndWait()
-    return text
+# Example function to simulate retrieving and utilizing a Smola model
+def load_smola_model():
+    # Load your Smola model here; this is a placeholder
+    # Assume we correctly load a Koroko model here
+    return "Smola Model Loaded"
 
-def chat_function(input_text, audio_input, voice_option):
-    if audio_input:
-        response_text = transcribe_audio(audio_input)
-    else:
-        response_text = input_text
+def generate_voice_options():
+    voice_options = [
+        {"name": "Default", "language": "English", "gender": "Male"},
+        {"name": "Natural", "language": "English", "gender": "Female"},
+        {"name": "Energetic", "language": "Spanish", "gender": "Male"},
+        {"name": "Calm", "language": "French", "gender": "Female"},
+    ]
+    return voice_options
 
-    # Here, you could further process response_text to create chat logic
-    
-    # Convert text to speech
-    text_to_speech(response_text, voice_option)
-    
-    return response_text
+@app.route('/')
+def index():
+    return render_template('index.html')
 
+@app.route('/api/voice-options', methods=['GET'])
+def get_voice_options():
+    options = generate_voice_options()
+    return jsonify(options)
 
-# Define Gradio Interface
-iface = gr.Interface(
-    fn=chat_function,
-    inputs=[
-        gr.Textbox(label="Text Input"),
-        gr.Audio(label='Audio Input', type='filepath'),
-        gr.Radio(label="Voice Option", choices=['default', 'realistic'])
+@app.route('/api/smola-inference', methods=['POST'])
+def smola_inference():
+    data = request.json
+    # Process the input data using the Smola model, placeholder processing logic
+    response = {
+        "result": f"Processed input text: {data['text']} with model {load_smola_model()}"
+    }
+    return jsonify(response)
 
-    ],
-    outputs=gr.Textbox(label="Response Text", type='auto')
-)
-
-if __name__ == "__main__":
-    iface.launch()
+if __name__ == '__main__':
+    app.run(debug=True)
